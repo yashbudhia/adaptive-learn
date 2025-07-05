@@ -7,6 +7,7 @@ from datetime import datetime
 import logging
 
 from app.database import websocket_manager, realtime_cache, get_async_db
+from app.config import settings
 from app.models import (
     WebSocketMessage, WebSocketMessageType, BossActionRequest, BossActionResponse,
     WebSocketBossActionRequest, WebSocketActionOutcome, LearningUpdateData,
