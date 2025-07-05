@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Fighting Game 2D</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" type="text/css" media="screen" href="./index.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="top-indicator">
+        <div class="player1">
+          <div class="health"></div>
+          <div class="max-health"></div>
+        </div>
+        <div class="timer">--</div>
+        <div class="player2">
+          <div class="health"></div>
+          <div class="max-health"></div>
+        </div>
+      </div>
+      <div class="dialog"></div>
+      <canvas></canvas>
+    </div>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.10.2/gsap.min.js"
+      integrity="sha512-kVlGhj2qFy+KBCFuvjBJTGUMxbdqJKs4yK2jh0e0VPhWUPiPC87bzm4THmaaIee3Oj7j6sDpTTgm2EPPiESqBg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script src="js/classes.js"></script>
+    <script src="./index.js"></script>
+  </body>
+</html>
