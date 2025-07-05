@@ -2,6 +2,13 @@ import os
 from typing import Optional
 from pydantic_settings import BaseSettings
 from cryptography.fernet import Fernet
+from dotenv import load_dotenv
+import pathlib
+
+# Load environment variables from .env file
+# Use absolute path to ensure it works in all contexts
+env_path = pathlib.Path(__file__).parent.parent / '.env'
+load_dotenv(env_path)
 
 
 class Settings(BaseSettings):
@@ -13,7 +20,7 @@ class Settings(BaseSettings):
     debug: bool = False
     
     # Database Configuration
-    database_url: str = "postgresql://adaptive_user:adaptive_password@localhost:5432/adaptive_boss_db"
+    database_url: str = "postgresql://postgres:vaibhav@localhost:5432/adaptive_boss_db"
     
     # Redis Configuration
     redis_url: str = "redis://localhost:6379/0"
@@ -46,6 +53,7 @@ class Settings(BaseSettings):
     
     class Config:
         env_file = ".env"
+        env_file_encoding = "utf-8"
         case_sensitive = False
     
     def __init__(self, **kwargs):

@@ -10,6 +10,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Debug: Print the database URL being used
+print(f"DEBUG: Database URL being used: {settings.database_url}")
+
 # Database setup
 engine = create_engine(
     settings.database_url,
