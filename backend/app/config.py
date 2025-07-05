@@ -1,65 +1,73 @@
 import os
 from typing import Optional
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 from cryptography.fernet import Fernet
 
 
 class Settings(BaseSettings):
-    # OpenAI Configuration
-    openai_api_key: str
-    
-    # JigsawStack Configuration
-    jigsawstack_api_key: str
-    
-    # Database Configuration
-    database_url: str
-    
-    # Redis Configuration
-    redis_url: str = "redis://localhost:6379/0"
-    
-    # Security
-    secret_key: str
-    algorithm: str = "HS256"
-    access_token_expire_minutes: int = 30
+    """Application settings with secure credential management"""
     
     # API Configuration
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     debug: bool = False
     
+    # Database Configuration
+    database_url: str = "postgresql://adaptive_user:adaptive_password@localhost:5432/adaptive_boss_db"
+    
+    # Redis Configuration
+    redis_url: str = "redis://localhost:6379/0"
+    
+    # Security
+    secret_key: str = "your_secret_key_generate_a_strong_one"
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 1440  # 24 hours
+    
+    # Encryption key for sensitive data
+    encryption_key: Optional[str] = None
+    
+    # AI Service Configuration
+    openai_api_key: str = "your_openai_api_key_here"
+    jigsawstack_api_key: str = "your_jigsawstack_api_key_here"
+    
     # FAISS Configuration
     faiss_index_path: str = "./data/faiss_indexes/"
-    embedding_dimension: int = 1536
+    embedding_dimension: int = 1536  # OpenAI ada-002 dimension
+    
+    # WebSocket Configuration
+    websocket_heartbeat_interval: int = 30  # seconds
+    websocket_timeout: int = 300  # 5 minutes
+    max_websocket_connections: int = 1000
+    
+    # Real-time Configuration
+    realtime_action_timeout: int = 10  # seconds
+    realtime_batch_size: int = 10
+    realtime_update_interval: float = 0.1  # seconds
     
     class Config:
         env_file = ".env"
         case_sensitive = False
-
-
-class SecurityManager:
-    """Handles encryption/decryption of sensitive data"""
     
-    def __init__(self, secret_key: str):
-        # Generate a key from the secret key
-        key = Fernet.generate_key()
-        self.cipher_suite = Fernet(key)
-        self._key = key
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        
+        # Generate encryption key if not provided
+        if not self.encryption_key:
+            self.encryption_key = Fernet.generate_key().decode()
     
-    def encrypt(self, data: str) -> str:
-        """Encrypt sensitive data"""
-        return self.cipher_suite.encrypt(data.encode()).decode()
+    @property
+    def fernet(self) -> Fernet:
+        """Get Fernet encryption instance"""
+        return Fernet(self.encryption_key.encode())
     
-    def decrypt(self, encrypted_data: str) -> str:
-        """Decrypt sensitive data"""
-        return self.cipher_suite.decrypt(encrypted_data.encode()).decode()
+    def encrypt_credential(self, credential: str) -> str:
+        """Encrypt a credential"""
+        return self.fernet.encrypt(credential.encode()).decode()
     
-    def get_key(self) -> bytes:
-        """Get the encryption key"""
-        return self._key
+    def decrypt_credential(self, encrypted_credential: str) -> str:
+        """Decrypt a credential"""
+        return self.fernet.decrypt(encrypted_credential.encode()).decode()
 
 
 # Global settings instance
 settings = Settings()
-
-# Global security manager
-security_manager = SecurityManager(settings.secret_key)
