@@ -10,6 +10,8 @@ Memory from FAISS (semantic search)
 
 Smart reasoning via JigsawStack's structured prompts
 
+
+
 And expose it via API for any client (game, app, etc.)
 
 ✅ HIGH-LEVEL WORKFLOW (No Code)
