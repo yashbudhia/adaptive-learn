@@ -103,3 +103,27 @@ div.dialog {
   width: 1366px;
   height: 768px;
 } */
+
+.controls-info {
+  position: absolute;
+  top: 80px;
+  left: 20px;
+  color: white;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 10px;
+  border-radius: 5px;
+  z-index: 10;
+}
+
+.difficulty-display {
+  position: absolute;
+  top: 80px;
+  right: 20px;
+  color: white;
+  font-size: 14px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 10px;
+  border-radius: 5px;
+  z-index: 10;
+}

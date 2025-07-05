@@ -7,6 +7,44 @@ canvas2dContext.fillRect(0, 0, canvas.width, canvas.height);
 
 const gravity = 0.7;
 
+// Game logging system
+class GameLogger {
+  constructor() {
+    this.enablePlayerLogging = true;
+    this.playerLogCount = 0;
+    this.maxLogs = 50;
+  }
+
+  logPlayer(action, details = {}) {
+    if (this.enablePlayerLogging && this.playerLogCount < this.maxLogs) {
+      const playerState = {
+        position: Math.round(player.position.x),
+        velocityX: Math.round(player.velocity.x),
+        velocityY: Math.round(player.velocity.y),
+        health: player.health,
+        attacking: player.isAttacking,
+        onGround: player.position.y >= 618
+      };
+      
+      console.log(`🎮 PLAYER | ${action}`, { state: playerState, ...details });
+      this.playerLogCount++;
+    }
+  }
+
+  togglePlayerLogging() {
+    this.enablePlayerLogging = !this.enablePlayerLogging;
+    console.log(`🎮 Player Logging ${this.enablePlayerLogging ? 'ENABLED' : 'DISABLED'}`);
+    return this.enablePlayerLogging;
+  }
+
+  resetLogCounter() {
+    this.playerLogCount = 0;
+    console.log("🎮 Player Log counter reset");
+  }
+}
+
+const gameLogger = new GameLogger();
+
 const background = new Sprite({
   position: {
     x: 0,
@@ -137,17 +175,14 @@ const enemy = new Fighter({
 });
 enemy.draw();
 
+// Initialize CPU controller for the enemy
+const enemyCPU = new CPUController(enemy, player);
+
 const keys = {
   a: {
     pressed: false,
   },
   d: {
-    pressed: false,
-  },
-  ArrowLeft: {
-    pressed: false,
-  },
-  ArrowRight: {
     pressed: false,
   },
 };
@@ -171,9 +206,9 @@ function determineWinner({ player, enemy, startCountDown }) {
   if (player.health === enemy.health) {
     document.querySelector(".dialog").innerHTML = "Tie";
   } else if (player.health > enemy.health) {
-    document.querySelector(".dialog").innerHTML = "Play 1 Wins";
+    document.querySelector(".dialog").innerHTML = "Player Wins";
   } else if (player.health < enemy.health) {
-    document.querySelector(".dialog").innerHTML = "Play 2 Wins";
+    document.querySelector(".dialog").innerHTML = "CPU Wins";
   }
 }
 
@@ -217,23 +252,9 @@ function animate() {
   } else if (player.velocity.y > 0) {
     player.switchSprite("fall");
   }
-  // enemy movement
-  enemy.velocity.x = 0;
-  if (keys.ArrowLeft.pressed && enemy.lastKey === "ArrowLeft") {
-    enemy.velocity.x = -5;
-    enemy.switchSprite("run");
-  } else if (keys.ArrowRight.pressed && enemy.lastKey === "ArrowRight") {
-    enemy.velocity.x = 5;
-    enemy.switchSprite("run");
-  } else {
-    enemy.switchSprite("idle");
-  }
-  // jumping up to down
-  if (enemy.velocity.y < 0) {
-    enemy.switchSprite("jump");
-  } else if (enemy.velocity.y > 0) {
-    enemy.switchSprite("fall");
-  }
+
+  // Update CPU enemy behavior
+  enemyCPU.update();
 
   //detect for attack collision
   if (
@@ -242,7 +263,8 @@ function animate() {
     player.currentFrame === 4
   ) {
     player.isAttacking = false; // one attack per count
-    console.log("1 hit 2");
+    console.log("🎯 HIT! Player hit CPU");
+    gameLogger.logPlayer("HIT_SUCCESS", { damage: 20, enemyHealth: enemy.health - 20 });
     enemy.takeHit();
     // document.querySelector(
     //   "div.player2 > .health"
@@ -254,6 +276,7 @@ function animate() {
   // play attack miss
   if (player.isAttacking && player.currentFrame === 4) {
     player.isAttacking = false;
+    gameLogger.logPlayer("ATTACK_MISS", { reason: "No collision detected" });
   }
   if (
     rectangularCollision({ rectangule1: enemy, rectangule2: player }) &&
@@ -261,7 +284,7 @@ function animate() {
     enemy.currentFrame === 4
   ) {
     enemy.isAttacking = false; // one attack per count
-    console.log("2 hit 1");
+    console.log("💀 HIT! CPU hit Player");
     player.takeHit();
     // document.querySelector(
     //   "div.player1 > .health"
@@ -289,36 +312,51 @@ window.addEventListener("keydown", (event) => {
       case "a":
         keys.a.pressed = true;
         player.lastKey = "a";
+        gameLogger.logPlayer("MOVE_LEFT", { key: "a" });
         break;
       case "d":
         keys.d.pressed = true;
         player.lastKey = "d";
+        gameLogger.logPlayer("MOVE_RIGHT", { key: "d" });
         break;
       case "w":
         player.velocity.y = -20;
+        gameLogger.logPlayer("JUMP", { key: "w", jumpVelocity: -20 });
         break;
       case " ":
         player.attack();
+        gameLogger.logPlayer("ATTACK", { key: "space" });
         break;
-    }
-  }
-
-  // enemy movement
-  if (!enemy.dead) {
-    switch (event.key) {
-      case "ArrowLeft":
-        keys.ArrowLeft.pressed = true;
-        enemy.lastKey = "ArrowLeft";
+      // Difficulty controls for CPU
+      case "1":
+        enemyCPU.setDifficulty('easy');
+        document.getElementById('difficulty-level').textContent = 'Easy';
+        console.log("CPU difficulty set to: Easy");
         break;
-      case "ArrowRight":
-        keys.ArrowRight.pressed = true;
-        enemy.lastKey = "ArrowRight";
+      case "2":
+        enemyCPU.setDifficulty('medium');
+        document.getElementById('difficulty-level').textContent = 'Medium';
+        console.log("CPU difficulty set to: Medium");
         break;
-      case "ArrowUp":
-        enemy.velocity.y = -20;
+      case "3":
+        enemyCPU.setDifficulty('hard');
+        document.getElementById('difficulty-level').textContent = 'Hard';
+        console.log("CPU difficulty set to: Hard");
         break;
-      case "ArrowDown":
-        enemy.attack();
+      // Logging controls
+      case "l":
+        gameLogger.togglePlayerLogging();
+        break;
+      case "k":
+        enemyCPU.toggleLogging();
+        break;
+      case "r":
+        gameLogger.resetLogCounter();
+        enemyCPU.resetLogCounter();
+        break;
+      case "s":
+        enemyCPU.saveLogsNow();
+        console.log("📁 Manual log save triggered");
         break;
     }
   }
@@ -329,16 +367,11 @@ window.addEventListener("keyup", (event) => {
     // player movement
     case "a":
       keys.a.pressed = false;
+      gameLogger.logPlayer("STOP_LEFT", { key: "a released" });
       break;
     case "d":
       keys.d.pressed = false;
-      break;
-    // enemy movement
-    case "ArrowLeft":
-      keys.ArrowLeft.pressed = false;
-      break;
-    case "ArrowRight":
-      keys.ArrowRight.pressed = false;
+      gameLogger.logPlayer("STOP_RIGHT", { key: "d released" });
       break;
   }
 });
